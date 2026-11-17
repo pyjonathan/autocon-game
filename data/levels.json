@@ -1,0 +1,391 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "ieee-802-1d",
+      "title": "IEEE Std 802.1D-2004, Media Access Control (MAC) Bridges",
+      "url": "https://standards.ieee.org/ieee/802.1D/3392/",
+      "section": "Forwarding process (clause to be confirmed)",
+      "claim": "A bridge (switch) forwards a frame by its destination MAC address, and floods a frame whose destination address it has not learned.",
+      "unconfirmed": true
+    },
+    {
+      "id": "rfc1812-next-hop",
+      "title": "RFC 1812, Requirements for IP Version 4 Routers",
+      "url": "https://www.rfc-editor.org/rfc/rfc1812",
+      "section": "5.2.4.3 Next Hop Address",
+      "claim": "A router chooses the next hop by matching the destination IP address against its routes, and a default route covers destinations that no more specific route matches."
+    },
+    {
+      "id": "rfc1812-ttl",
+      "title": "RFC 1812, Requirements for IP Version 4 Routers",
+      "url": "https://www.rfc-editor.org/rfc/rfc1812",
+      "section": "5.3.1 Time to Live (TTL)",
+      "claim": "A router that forwards a packet decrements its Time to Live (TTL)."
+    },
+    {
+      "id": "rfc9293-768",
+      "title": "RFC 9293 (TCP) and RFC 768 (UDP)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9293",
+      "section": "RFC 9293 section 3.1 Header Format; RFC 768 Format",
+      "claim": "TCP and UDP headers both carry a destination port, and the protocol (TCP or UDP) is part of what identifies the traffic."
+    },
+    {
+      "id": "nist-800-41",
+      "title": "NIST SP 800-41 Rev. 1, Guidelines on Firewalls and Firewall Policy",
+      "url": "https://csrc.nist.gov/pubs/sp/800/41/r1/final",
+      "section": "Section 3, packet filtering (section to be confirmed)",
+      "claim": "A packet filter evaluates its rules in order, and a default-deny posture is the recommended baseline.",
+      "unconfirmed": true
+    }
+  ],
+  "levels": [
+    {
+      "id": "level-1-switch",
+      "title": "Level 1 · The switch",
+      "device": "switch",
+      "outcome": "LO1: Explain that a switch forwards a frame by destination MAC, and floods when the MAC is unknown.",
+      "sourceIds": ["ieee-802-1d"],
+      "briefing": {
+        "intro": "Your first stop is a switch. A switch connects devices on the same local network, and it moves Ethernet frames between its ports.",
+        "reads": "A switch reads the destination MAC address in the Ethernet header. It ignores IP addresses and ports.",
+        "terms": [
+          { "term": "MAC address", "definition": "The hardware address of a network interface, written as six hex pairs such as 00:aa:00:00:00:03." },
+          { "term": "MAC table", "definition": "The switch's list of which MAC address was learned on which port." },
+          { "term": "Ingress port", "definition": "The port a frame arrived on. A switch never sends a frame back out its ingress port." },
+          { "term": "Flooding", "definition": "When the destination MAC is not in the table, the switch sends the frame out every port except the ingress port." }
+        ],
+        "example": {
+          "heading": "Worked example (not one of your rounds)",
+          "text": "A frame arrives on port A1 with destination MAC 00:11:22:33:44:55. The MAC table lists 00:11:22:33:44:55 on port A3. The switch forwards the frame out A3 only. If that MAC were not in the table, the switch would flood the frame out every port except A1."
+        },
+        "boundaries": [
+          "In this game the MAC table is already learned when a round starts.",
+          "VLANs, spanning tree, and broadcast or multicast frames are not modeled."
+        ]
+      },
+      "table": {
+        "name": "SW1",
+        "ports": [
+          { "id": "gi0-1", "label": "Gi0/1" },
+          { "id": "gi0-2", "label": "Gi0/2" },
+          { "id": "gi0-3", "label": "Gi0/3" },
+          { "id": "gi0-4", "label": "Gi0/4 (uplink)" }
+        ],
+        "macEntries": [
+          { "mac": "00:aa:00:00:00:01", "portId": "gi0-1" },
+          { "mac": "00:aa:00:00:00:02", "portId": "gi0-2" },
+          { "mac": "00:aa:00:00:00:03", "portId": "gi0-3" }
+        ]
+      },
+      "rounds": [
+        {
+          "id": "l1r1",
+          "title": "A known destination",
+          "prompt": "A frame from PC-A arrives on SW1. Which gate does the switch send it through?",
+          "ingress": "gi0-1",
+          "packet": {
+            "srcMac": "00:aa:00:00:00:01",
+            "dstMac": "00:aa:00:00:00:03",
+            "srcIp": "10.0.0.1",
+            "dstIp": "10.0.0.3",
+            "protocol": "TCP",
+            "dstPort": 443,
+            "ttl": 64
+          },
+          "gates": [
+            { "id": "gi0-1", "label": "Gi0/1" },
+            { "id": "gi0-2", "label": "Gi0/2" },
+            { "id": "gi0-3", "label": "Gi0/3" },
+            { "id": "gi0-4", "label": "Gi0/4 (uplink)" },
+            { "id": "flood", "label": "Flood (all ports except ingress)" },
+            { "id": "drop", "label": "Drop the frame" }
+          ],
+          "help": {
+            "method": "A switch decides by the destination MAC address in the Ethernet header. Find that value, then look for it in the MAC table.",
+            "steps": [
+              "The destination MAC of this frame is 00:aa:00:00:00:03.",
+              "The MAC table lists 00:aa:00:00:00:03 on Gi0/3.",
+              "The frame arrived on Gi0/1, and a switch never sends a frame back out its ingress port."
+            ]
+          },
+          "misconceptions": {
+            "gi0-1": {
+              "text": "Gi0/1 is where the frame arrived, and a switch never sends a frame back out its ingress port. The switch does not look up the source MAC (00:aa:00:00:00:01) to choose an exit. It searches its MAC table for the destination MAC (00:aa:00:00:00:03)."
+            }
+          }
+        },
+        {
+          "id": "l1r2",
+          "title": "An unknown destination",
+          "prompt": "PC-A sends another frame. This time the switch has not learned the destination. Which gate does the switch use?",
+          "ingress": "gi0-1",
+          "packet": {
+            "srcMac": "00:aa:00:00:00:01",
+            "dstMac": "00:aa:00:00:00:09",
+            "srcIp": "10.0.0.1",
+            "dstIp": "10.0.0.9",
+            "protocol": "TCP",
+            "dstPort": 443,
+            "ttl": 64
+          },
+          "gates": [
+            { "id": "gi0-1", "label": "Gi0/1" },
+            { "id": "gi0-2", "label": "Gi0/2" },
+            { "id": "gi0-3", "label": "Gi0/3" },
+            { "id": "gi0-4", "label": "Gi0/4 (uplink)" },
+            { "id": "flood", "label": "Flood (all ports except ingress)" },
+            { "id": "drop", "label": "Drop the frame" }
+          ],
+          "help": {
+            "method": "Look up the destination MAC in the MAC table. If it is there, the switch uses that one port. If it is not, the switch cannot know where the device is.",
+            "steps": [
+              "The destination MAC of this frame is 00:aa:00:00:00:09.",
+              "The MAC table has entries for ...:01, ...:02, and ...:03 only, so ...:09 is not learned.",
+              "With no entry, the switch sends the frame out every port except the ingress port (Gi0/1), so the destination can receive it and be learned."
+            ]
+          },
+          "misconceptions": {
+            "drop": {
+              "text": "A switch does not drop a frame just because the destination MAC is missing from its table. An unknown unicast destination is flooded so that the device, if it exists on this network, receives the frame and can answer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "level-2-router",
+      "title": "Level 2 · The router",
+      "device": "router",
+      "outcome": "LO2: Apply a router's forwarding decision using the destination IP, falling back to the default route, and recognize that TTL drops by 1 and the Ethernet addresses are rewritten.",
+      "sourceIds": ["rfc1812-next-hop", "rfc1812-ttl"],
+      "briefing": {
+        "intro": "Next is a router. A router connects different networks and moves packets between them.",
+        "reads": "A router reads the destination IP address. It compares it with the prefixes in its routing table, and it uses the default route only when no more specific route contains the address.",
+        "terms": [
+          { "term": "Prefix", "definition": "A network written as an address and a length, such as 192.168.1.0/24, which covers 192.168.1.0 through 192.168.1.255." },
+          { "term": "Connected route", "definition": "A route to a network that the router is directly attached to." },
+          { "term": "Default route (0.0.0.0/0)", "definition": "The route used when no more specific route matches. It matches any address." },
+          { "term": "TTL", "definition": "A counter in the IP header. Each router that forwards the packet subtracts 1." },
+          { "term": "MAC rewrite", "definition": "At every hop the router builds a new Ethernet frame, so the source and destination MAC addresses change. The IP addresses stay the same." }
+        ],
+        "example": {
+          "heading": "Worked example (not one of your rounds)",
+          "text": "A router has 172.16.0.0/16 out port P1 and a default route out port P9. A packet for 172.16.5.9 falls inside 172.16.0.0/16, so it leaves out P1 and its TTL drops from 64 to 63. A packet for 8.8.8.8 is inside no specific prefix, so it uses the default route out P9."
+        },
+        "boundaries": [
+          "This router has only connected routes and one default route, and routes never overlap.",
+          "ARP is already resolved, and TTL expiry is not modeled.",
+          "Longest-prefix tie-breaking is not needed here, so it is not taught in this game."
+        ]
+      },
+      "table": {
+        "name": "R1",
+        "interfaces": [
+          { "id": "gi0-0", "label": "Gi0/0", "address": "192.168.1.1", "prefixLength": 24 },
+          { "id": "gi0-1", "label": "Gi0/1", "address": "192.168.2.1", "prefixLength": 24 },
+          { "id": "gi0-2", "label": "Gi0/2", "address": "203.0.113.2", "prefixLength": 30 }
+        ],
+        "routes": [
+          { "prefix": "192.168.1.0", "prefixLength": 24, "interfaceId": "gi0-0" },
+          { "prefix": "192.168.2.0", "prefixLength": 24, "interfaceId": "gi0-1" },
+          { "prefix": "0.0.0.0", "prefixLength": 0, "interfaceId": "gi0-2", "nextHop": "203.0.113.1" }
+        ]
+      },
+      "rounds": [
+        {
+          "id": "l2r1",
+          "title": "A connected network",
+          "prompt": "A packet from a laptop on 192.168.1.0/24 reaches R1. Which gate does the router use?",
+          "ingress": "gi0-0",
+          "packet": {
+            "srcMac": "00:aa:00:00:01:0a",
+            "dstMac": "00:bb:00:00:00:01",
+            "srcIp": "192.168.1.10",
+            "dstIp": "192.168.2.77",
+            "protocol": "TCP",
+            "dstPort": 443,
+            "ttl": 64
+          },
+          "display": {
+            "rewrittenSrcMac": "00:bb:00:00:00:02",
+            "rewrittenDstMac": "00:cc:00:00:02:4d"
+          },
+          "gates": [
+            { "id": "gi0-0", "label": "Gi0/0 (192.168.1.0/24)" },
+            { "id": "gi0-1", "label": "Gi0/1 (192.168.2.0/24)" },
+            { "id": "gi0-2", "label": "Gi0/2 (default route)" },
+            { "id": "drop", "label": "Drop the packet" }
+          ],
+          "help": {
+            "method": "Compare the destination IP with the prefix of each route. A specific route that contains the address wins. Use the default route only if none does.",
+            "steps": [
+              "The destination IP is 192.168.2.77.",
+              "192.168.1.0/24 covers 192.168.1.0 to 192.168.1.255, so it does not contain the address.",
+              "192.168.2.0/24 covers 192.168.2.0 to 192.168.2.255, so it contains the address. That is a specific match, so the default route is not needed."
+            ]
+          },
+          "misconceptions": {
+            "gi0-2": {
+              "text": "The default route (0.0.0.0/0) matches every address, but a router uses it only when no more specific route contains the destination. Check whether 192.168.2.77 falls inside one of the connected networks before reaching for the default route."
+            },
+            "gi0-0": {
+              "text": "Gi0/0 is the interface the packet arrived on. A router forwards a packet toward the network that contains the destination IP address (192.168.2.77), not back toward where it came from."
+            }
+          }
+        },
+        {
+          "id": "l2r2",
+          "title": "A near miss",
+          "prompt": "The next packet is addressed to 192.168.3.10, which looks a lot like the networks R1 is attached to. Which gate does the router use?",
+          "ingress": "gi0-0",
+          "packet": {
+            "srcMac": "00:aa:00:00:01:0a",
+            "dstMac": "00:bb:00:00:00:01",
+            "srcIp": "192.168.1.10",
+            "dstIp": "192.168.3.10",
+            "protocol": "TCP",
+            "dstPort": 443,
+            "ttl": 64
+          },
+          "display": {
+            "rewrittenSrcMac": "00:bb:00:00:00:03",
+            "rewrittenDstMac": "00:dd:00:00:00:01"
+          },
+          "gates": [
+            { "id": "gi0-0", "label": "Gi0/0 (192.168.1.0/24)" },
+            { "id": "gi0-1", "label": "Gi0/1 (192.168.2.0/24)" },
+            { "id": "gi0-2", "label": "Gi0/2 (default route)" },
+            { "id": "drop", "label": "Drop the packet" }
+          ],
+          "help": {
+            "method": "Check the destination IP against every specific prefix first. Only when none contains it do you fall back to the default route.",
+            "steps": [
+              "The destination IP is 192.168.3.10.",
+              "192.168.1.0/24 covers 192.168.1.0 to 192.168.1.255 and 192.168.2.0/24 covers 192.168.2.0 to 192.168.2.255, and neither contains 192.168.3.10, even though the address looks similar.",
+              "No specific route matches, so the router uses the default route 0.0.0.0/0 toward 203.0.113.1."
+            ]
+          },
+          "misconceptions": {
+            "gi0-1": {
+              "text": "192.168.3.10 looks close to 192.168.2.0/24, but that prefix covers only 192.168.2.0 to 192.168.2.255, so the destination is not inside it. The prefix has to contain the address, not just look like it."
+            },
+            "drop": {
+              "text": "A router drops a packet only when no route matches at all. This router has a default route (0.0.0.0/0), which matches any destination that no more specific route covers."
+            },
+            "gi0-0": {
+              "text": "Gi0/0 is the interface the packet arrived on, and 192.168.3.10 is not inside 192.168.1.0/24 either. A router does not send a packet back toward its source."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "level-3-firewall",
+      "title": "Level 3 · The firewall",
+      "device": "firewall",
+      "outcome": "LO3: Evaluate an ordered firewall rule list on protocol and port, where the first match wins and no match means implicit deny.",
+      "sourceIds": ["rfc9293-768", "nist-800-41"],
+      "briefing": {
+        "intro": "Your last stop is a firewall, which decides whether traffic is allowed through.",
+        "reads": "A firewall rule list reads the protocol (TCP or UDP) and the destination port. The rules are checked from top to bottom, and the first rule that matches both decides the packet. If no rule matches, the implicit deny at the end drops it.",
+        "terms": [
+          { "term": "Protocol", "definition": "TCP and UDP are different protocols that each have their own port numbers. A rule for TCP 443 does not match UDP 443." },
+          { "term": "Destination port", "definition": "A number that identifies the service the traffic is for, such as 443 for HTTPS or 23 for Telnet." },
+          { "term": "First match wins", "definition": "The firewall stops at the first rule that matches. Rules below it are never checked for that packet." },
+          { "term": "Implicit deny", "definition": "The unwritten rule at the end of the list: if nothing matched, the packet is denied." }
+        ],
+        "example": {
+          "heading": "Worked example (not one of your rounds)",
+          "text": "A list has: 1 PERMIT TCP 80, 2 DENY TCP any. A TCP packet to port 80 matches rule 1 first and is permitted, even though rule 2 would also match. A UDP packet to port 80 matches neither rule, so the implicit deny drops it."
+        },
+        "boundaries": [
+          "This firewall is stateless and ordered, and it matches only protocol and destination port. Many real firewalls are also stateful, which this game does not model.",
+          "Source addresses, NAT, and return traffic are not modeled."
+        ]
+      },
+      "table": {
+        "name": "FW1",
+        "rules": [
+          { "id": "rule-1", "action": "DENY", "protocol": "TCP", "dstPort": 23 },
+          { "id": "rule-2", "action": "PERMIT", "protocol": "TCP", "dstPort": "any" },
+          { "id": "rule-3", "action": "PERMIT", "protocol": "UDP", "dstPort": 53 }
+        ]
+      },
+      "rounds": [
+        {
+          "id": "l3r1",
+          "title": "First match wins",
+          "prompt": "A Telnet packet reaches FW1. Which rule decides what happens to it?",
+          "packet": {
+            "srcMac": "00:aa:00:00:01:14",
+            "dstMac": "00:ee:00:00:00:01",
+            "srcIp": "10.1.1.20",
+            "dstIp": "203.0.113.10",
+            "protocol": "TCP",
+            "dstPort": 23,
+            "ttl": 64
+          },
+          "gates": [
+            { "id": "rule-1", "label": "Rule 1 · DENY TCP 23" },
+            { "id": "rule-2", "label": "Rule 2 · PERMIT TCP any" },
+            { "id": "rule-3", "label": "Rule 3 · PERMIT UDP 53" },
+            { "id": "implicit-deny", "label": "Implicit deny (no rule matches)" }
+          ],
+          "help": {
+            "method": "Start at rule 1 and go down. Stop at the first rule whose protocol and port both match the packet.",
+            "steps": [
+              "The packet is TCP to destination port 23.",
+              "Rule 1 is for TCP port 23, so both protocol and port match, and the search stops there.",
+              "Rule 2 would also match TCP traffic, but it is never reached."
+            ]
+          },
+          "misconceptions": {
+            "rule-2": {
+              "text": "Rule 2 does match TCP traffic, but a firewall checks rules from the top and stops at the first match. A rule above rule 2 matches this packet first, so rule 2 is never reached."
+            },
+            "implicit-deny": {
+              "text": "The implicit deny is only reached when no rule matches. Work down the list from the top: at least one rule matches this packet."
+            }
+          }
+        },
+        {
+          "id": "l3r2",
+          "title": "Right port, wrong protocol",
+          "prompt": "A UDP packet to port 443 reaches FW1. Which rule decides what happens to it?",
+          "packet": {
+            "srcMac": "00:aa:00:00:01:14",
+            "dstMac": "00:ee:00:00:00:01",
+            "srcIp": "10.1.1.20",
+            "dstIp": "203.0.113.10",
+            "protocol": "UDP",
+            "dstPort": 443,
+            "ttl": 64
+          },
+          "gates": [
+            { "id": "rule-1", "label": "Rule 1 · DENY TCP 23" },
+            { "id": "rule-2", "label": "Rule 2 · PERMIT TCP any" },
+            { "id": "rule-3", "label": "Rule 3 · PERMIT UDP 53" },
+            { "id": "implicit-deny", "label": "Implicit deny (no rule matches)" }
+          ],
+          "help": {
+            "method": "A rule matches only if both its protocol and its port match. Check each rule in order, and if none matches, the implicit deny applies.",
+            "steps": [
+              "The packet is UDP to destination port 443.",
+              "Rule 1 is TCP, and rule 2 is TCP, so neither matches a UDP packet.",
+              "Rule 3 is UDP but only for port 53, not 443, so it does not match either. No rule matches, so the implicit deny at the end applies."
+            ]
+          },
+          "misconceptions": {
+            "rule-3": {
+              "text": "Rule 3 matches UDP, but only destination port 53. This packet is going to port 443, so the rule does not match. A rule needs both the protocol and the port to match."
+            },
+            "rule-2": {
+              "text": "Rule 2 is a TCP rule, and this packet is UDP. TCP and UDP are different protocols, so a TCP rule never matches UDP traffic, even for the same port number."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

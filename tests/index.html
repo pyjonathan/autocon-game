@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Packet Run · Tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 52rem; padding: 0 1rem; line-height: 1.5; }
+    .pass { color: #0a6b2b; }
+    .fail { color: #a11; font-weight: 600; }
+    #summary { font-size: 1.25rem; font-weight: 700; padding: .5rem 1rem; border: 2px solid currentColor; border-radius: .5rem; display: inline-block; }
+    li { margin: .2rem 0; }
+    code { background: #eee; padding: 0 .25rem; border-radius: .2rem; }
+  </style>
+</head>
+<body>
+  <h1>Packet Run · Tests</h1>
+  <p>Serve the repository root over HTTP and open this page. Zero discovered tests counts as a failure.</p>
+  <p id="summary" role="status">Running…</p>
+  <h2>Failed cases</h2>
+  <ul id="failed"><li>None yet.</li></ul>
+  <h2>All cases</h2>
+  <ul id="all"></ul>
+
+  <script type="module">
+    import { runAll } from './harness.js';
+    // Importing a test file registers its tests.
+    await import('./rules.test.js');
+    await import('./content.test.js');
+    await import('./state.test.js');
+
+    const summary = document.getElementById('summary');
+    const failedList = document.getElementById('failed');
+    const allList = document.getElementById('all');
+    try {
+      const { total, passed, failed, results } = await runAll();
+      const ok = total > 0 && failed.length === 0;
+      summary.textContent = total === 0
+        ? 'FAIL: no tests were discovered'
+        : `${ok ? 'PASS' : 'FAIL'}: ${passed} of ${total} passed, ${failed.length} failed`;
+      summary.className = ok ? 'pass' : 'fail';
+      document.title = `${ok ? 'PASS' : 'FAIL'} · Packet Run tests`;
+      failedList.innerHTML = failed.length
+        ? failed.map((f) => `<li class="fail"><code>${f.id}</code>: ${f.error}</li>`).join('')
+        : '<li>None.</li>';
+      allList.innerHTML = results
+        .map((r) => `<li class="${r.ok ? 'pass' : 'fail'}">${r.ok ? '✔' : '✘'} <code>${r.id}</code></li>`)
+        .join('');
+    } catch (err) {
+      summary.textContent = `FAIL: runner error: ${err.message}`;
+      summary.className = 'fail';
+    }
+  </script>
+  <script type="module">
+    // If a test module fails to import, show it instead of a silent blank page.
+    window.addEventListener('unhandledrejection', (e) => {
+      const s = document.getElementById('summary');
+      s.textContent = `FAIL: ${e.reason && e.reason.message ? e.reason.message : e.reason}`;
+      s.className = 'fail';
+    });
+  </script>
+</body>
+</html>

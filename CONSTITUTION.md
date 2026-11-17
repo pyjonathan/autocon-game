@@ -1,13 +1,6 @@
-> **Editor note — personalize, then remove this note.**
-> This is the input to the **constitution** step. Replace the bracketed fields,
-> keep the principles you intend to enforce, and agree on any changes with your
-> group. Each principle includes evidence: your agent should know how to check it.
-> Read the lab guide before running commands. A completed example is available
-> in `WORKSHOP/LAB/Examples/PrefixQuest/` in the workshop repository.
+# Packet Run · Project constitution
 
-# [GAME NAME] · Project constitution
-
-**Purpose:** help [TARGET LEARNER] practice [ONE NETWORKING SKILL] through [CORE PLAYER ACTION].
+**Purpose:** help Network+ candidates practice recognizing which part of a packet header each network device reads (switch: destination MAC, router: destination IP, firewall: protocol and port) through choosing the exit gate a packet takes at each device.
 
 **First release:** one core mechanic, three short levels, a browser, and a 60-minute workshop build. Change this budget only by updating the agreed scope.
 
@@ -15,7 +8,7 @@
 
 The game must never reward a technically incorrect answer. Grading must be reproducible from a documented rule and the challenge inputs. Unsupported or ambiguous content is an authoring error: show an explanation that the challenge is unavailable and prevent grading it.
 
-Document the model being taught: [PROTOCOL/VENDOR CONTEXT, ASSUMPTIONS, AND IMPORTANT EXCLUSIONS]. Simplifications must appear in the briefing and README wherever they affect what the player can conclude. Fictional worlds and animations may illustrate a rule; they must not change it.
+Document the model being taught: a simplified, vendor-neutral model of unicast IPv4 over Ethernet. Switch MAC tables are already populated and ARP is already resolved when a round starts. A router has only connected routes plus one default route. A firewall is a stateless, ordered rule list that matches protocol and destination port. Excluded: VLANs, spanning tree, ARP exchanges, broadcast and multicast, IPv6, NAT, stateful inspection, overlapping route prefixes (longest-prefix tie-breaking), TTL expiry, and fragmentation. Simplifications must appear in the briefing and README wherever they affect what the player can conclude. Fictional worlds and animations may illustrate a rule; they must not change it.
 
 **Evidence:** hand-checked correct, incorrect, and boundary cases; a source link and section for each networking rule; review of all shipped briefings and explanations. Expected results are recorded independently of the implementation under test.
 
@@ -23,7 +16,7 @@ Document the model being taught: [PROTOCOL/VENDOR CONTEXT, ASSUMPTIONS, AND IMPO
 
 The player's main action must exercise the target skill. Introduce a concept before testing it, and show the values needed to reason about the answer. A wrong answer explains the specific mistake and gives the player a useful next step. A correct answer explains why it works.
 
-Use this learning sequence: [FOUNDATION] → [APPLICATION] → [TRANSFER OR EDGE CASE]. Hints reveal a method first, then a worked step. Worked solutions are available when a learner is stuck; viewing one is recorded as assistance, never as independent mastery.
+Use this learning sequence: switch reads the destination MAC (foundation) → router reads the destination IP, rewrites the MAC, and decrements TTL (application) → firewall reads protocol and port with first-match order and an implicit deny (transfer). Hints reveal a method first, then a worked step. Worked solutions are available when a learner is stuck; viewing one is recorded as assistance, never as independent mastery.
 
 **Evidence:** a teammate can connect each player action to a learning outcome and describe what they learned from a deliberately wrong choice.
 
